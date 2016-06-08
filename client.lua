@@ -14,6 +14,7 @@ local Icons = { --Иконочки
 }
 
 local OpenKey = "F3"
+local FullScreened = false
 
 local SearchEngine = "https://www.google.com/webhp?tab=ww#q=" --Поисковый сервис
 
@@ -43,6 +44,8 @@ local ColorScheme = {
 local DefCol = ColorScheme.Dark --Основной цвет
 
 local DefaultScreenSize = {800, 600} --Основное разрешение экрана, оно может редактироваться, так-же его можно будет в браузере установить в ручную
+local PositionsScreen = {}
+local SavedSize = {800, 600}
 
 --Создаём окно браузера
 local Browser = StaticWindow.create(50, 50, DefaultScreenSize[1], DefaultScreenSize[2], "HUI PIZDA EBU SOBAK", false)
@@ -57,13 +60,14 @@ local TitleBar = GuiStaticImage.create(0, 0, DefaultScreenSize[1], 25, pane, fal
 TitleBar:setProperty("ImageColours", "tl:FF"..DefCol.Top.." tr:FF"..DefCol.Top.." bl:FF"..DefCol.Top.." br:FF"..DefCol.Top.."")
 
 --Скроллер вкладок
-local TabScroll = ScrollMenu.create(20, 0, DefaultScreenSize[1]-20, 25, false, TitleBar)
+local TabScroll = ScrollMenu.create(31, 0, DefaultScreenSize[1]-31, 25, false, TitleBar)
 
 --Кнопка "Добавить вкладку"
 local AddTab = GuiStaticImage.create(0, 0, 23, 25, Icons.Adds, false, TabScroll.Menu)
 AddTab:setProperty("ImageColours", "tl:FF"..DefCol.But.." tr:FF"..DefCol.But.." bl:FF"..DefCol.But.." br:FF"..DefCol.But.."")
 
-local TabPreDiv = GuiStaticImage.create(0, 24, 20, 1, pane, false, TitleBar)
+--Преразделитель - ограничитель для кнопок управления окном
+local TabPreDiv = GuiStaticImage.create(0, 24, 30, 1, pane, false, TitleBar)
 TabPreDiv:setEnabled(false) --Делаем его ненажимаемым
 TabPreDiv:setProperty("ImageColours", "tl:FF"..DefCol.Divider.." tr:FF"..DefCol.Divider.." bl:FF"..DefCol.Divider.." br:FF"..DefCol.Divider.."")
 
@@ -73,7 +77,7 @@ TabDiv:setEnabled(false) --Делаем его ненажимаемым
 TabDiv:setProperty("ImageColours", "tl:FF"..DefCol.Divider.." tr:FF"..DefCol.Divider.." bl:FF"..DefCol.Divider.." br:FF"..DefCol.Divider.."")
 
 --Разделитель между кнопкой закрытия и владками
-local TabConDiv = GuiStaticImage.create(19, 0, 1, 25, pane, false, TitleBar)
+local TabConDiv = GuiStaticImage.create(30, 0, 1, 25, pane, false, TitleBar)
 TabConDiv:setEnabled(false) --Делаем его ненажимаемым
 TabConDiv:setProperty("ImageColours", "tl:FF"..DefCol.Divider.." tr:FF"..DefCol.Divider.." bl:FF"..DefCol.Divider.." br:FF"..DefCol.Divider.."")
 
@@ -87,19 +91,57 @@ ConDiv:setEnabled(false) --Делаем её недоступной
 ConDiv:setProperty("ImageColours", "tl:FF"..DefCol.Divider.." tr:FF"..DefCol.Divider.." bl:FF"..DefCol.Divider.." br:FF"..DefCol.Divider.."")
 
 --Кнопка закрытия браузера
-local CloseBrows = GuiStaticImage.create(4, 3, 10, 20, Icons.ButB, false, TitleBar)
+local CloseBrows = GuiStaticImage.create(4, 4, 10, 20, Icons.ButB, false, TitleBar)
 CloseBrows:setProperty("ImageColours", "tl:00000000 tr:00000000 bl:00000000 br:00000000")
 local CloseBroTop = GuiStaticImage.create(0, 0, 10, 20, Icons.But, false, CloseBrows)
 CloseBroTop:setProperty("ImageColours", "tl:FF"..DefCol.Text.." tr:FF"..DefCol.Text.." bl:FF"..DefCol.Text.." br:FF"..DefCol.Text.."")
+--Кнопка Fullscreen
+local FulscBrows = GuiStaticImage.create(16, 4, 10, 20, Icons.ButB, false, TitleBar)
+FulscBrows:setProperty("ImageColours", "tl:00000000 tr:00000000 bl:00000000 br:00000000")
+local FulscBroTop = GuiStaticImage.create(0, 0, 10, 20, Icons.But, false, FulscBrows)
+FulscBroTop:setProperty("ImageColours", "tl:FF"..DefCol.Text.." tr:FF"..DefCol.Text.." bl:FF"..DefCol.Text.." br:FF"..DefCol.Text.."")
 
 addEventHandler("onClientMouseEnter", root, function()
 	if source == CloseBroTop then
 		CloseBrows:setProperty("ImageColours", "tl:FFD2451F tr:FFD2451F bl:FFD2451F br:FFD2451F")
+	elseif source == FulscBroTop then
+		if FullScreened then
+			FulscBrows:setProperty("ImageColours", "tl:FFCCDD00 tr:FFCCDD00 bl:FFCCDD00 br:FFCCDD00")
+		else
+			FulscBrows:setProperty("ImageColours", "tl:FF269800 tr:FF269800 bl:FF269800 br:FF269800")
+		end
 	end
 end)
 addEventHandler("onClientMouseLeave", root, function()
 	CloseBrows:setProperty("ImageColours", "tl:00000000 tr:00000000 bl:00000000 br:00000000")
+	FulscBrows:setProperty("ImageColours", "tl:00000000 tr:00000000 bl:00000000 br:00000000")
 end)
+
+function setBrowserFullScreened(bool, w, h)
+	FullScreened = bool
+	if bool then
+		local ws, hs = Browser:getSize(false)
+		Browser:setBorderSize(0)
+		changeBrowserSize(Width, Height)
+		PositionsScreen = {Browser:getPosition(false)}
+		Browser:setPosition(0, 0, false)
+		Browser:setMovable(false)
+		SavedSize = {ws, hs}
+	else
+		Browser:setBorderSize(2)
+		if w and h then
+			changeBrowserSize(w, h)
+		else
+			changeBrowserSize(SavedSize[1], SavedSize[2])
+		end
+		Browser:setMovable(true)
+		
+		local x, y = Browser:getPosition(false)
+		Browser:setPosition(PositionsScreen[1] or x, PositionsScreen[2] or y, false)
+
+		PositionsScreen = {}
+	end
+end
 
 
 ---- ТИТУЛЬНЫЕ ЭЛЕМЕНТЫ (ПЕРЕХОДЫ, ССЫЛКИ) ----
@@ -236,6 +278,7 @@ addEventHandler("onClientGUIClick", root, function()
 	if source == BrowserParams then showSettings(1) end
 
 	if source == CloseBroTop then Browser:close() showCursor(false) end
+	if source == FulscBroTop then setBrowserFullScreened(not FullScreened) end
 end)
 addEventHandler("onClientGUIAccepted", root, function()
 	if source == LinkEnter then search() end --Если нажат энтер у поля ввода ссылки, то начать поиск
@@ -245,12 +288,18 @@ addEventHandler("onClientStaticWindowFullClosed", root, function(window)
 	if window == Browser then showCursor(false) end
 end)
 
+addEventHandler("onClientGUIDoubleClick", root, function()
+	if source == TitleBar or source == TabScroll.Menu then
+		setBrowserFullScreened(not FullScreened)
+	end
+end)
+
 
 --Функция для изменения размера браузера
 function changeBrowserSize(w, h)
-	Browser:setSize(w, h, false) --Для браузера
+	Browser:setSize(w, h, false, true) --Для браузера
 	TitleBar:setSize(w, 25, false) --Для титуля вкладок
-	TabScroll:setSize(w-20, 25, false) --Для их скроллера
+	TabScroll:setSize(w-31, 25, false) --Для их скроллера
 	TabDiv:setSize(w, 1, false) --Для разделителя
 	ControlElements:setSize(w, 30, false) --Для панели браузера
 	ConDiv:setSize(w, 1, false) --И её разделителя
@@ -278,7 +327,9 @@ function changeBrowserSize(w, h)
 		end
 	end
 
-	Tabs[SelectedTab].Browser:setVisible(true)
+	if not Tabs[SelectedTab].Closed then
+		Tabs[SelectedTab].Browser:setVisible(true)
+	end
 end
 
 --Создание вкладки
@@ -325,7 +376,7 @@ function createTab(active) --Аргумент отвечает за активн
 	if active then bringFront() end
 
 	--Кнопка закрытия вкладки
-	Tabs[id].CloseBack = GuiStaticImage.create(3, 3, 10, 20, Icons.ButB, false, Tabs[id].Top)
+	Tabs[id].CloseBack = GuiStaticImage.create(3, 4, 10, 20, Icons.ButB, false, Tabs[id].Top)
 	Tabs[id].CloseBack:setProperty("ImageColours", "tl:00000000 tr:00000000 bl:00000000 br:00000000")
 	Tabs[id].Close = GuiStaticImage.create(0, 0, 10, 20, Icons.But, false, Tabs[id].CloseBack)
 	Tabs[id].Close:setProperty("ImageColours", "tl:FF"..DefCol.Text.." tr:FF"..DefCol.Text.." bl:FF"..DefCol.Text.." br:FF"..DefCol.Text.."")
@@ -349,6 +400,12 @@ function createTab(active) --Аргумент отвечает за активн
 	--Tabs[id].Browser:setVisible(false)
 
 	--Событие по нажатию на вкладку
+
+	addEventHandler("onClientGUIDoubleClick", root, function()
+		if source == Tabs[id].Top then
+			setBrowserFullScreened(not FullScreened)
+		end
+	end)
 	addEventHandler("onClientGUIClick", root, function(but)
 		if source == Tabs[id].Top then --Если нажата вкладка
 			for i in pairs(Tabs) do --То циклим вкладки для уменьшения их размера, чтобы вкладка была не выделена
@@ -620,6 +677,7 @@ function setBrowserTheme(type)
 	ConDiv:setProperty("ImageColours", "tl:FF"..Var.Divider.." tr:FF"..Var.Divider.." bl:FF"..Var.Divider.." br:FF"..Var.Divider.."")
 	TabConDiv:setProperty("ImageColours", "tl:FF"..Var.Divider.." tr:FF"..Var.Divider.." bl:FF"..Var.Divider.." br:FF"..Var.Divider.."")
 	CloseBroTop:setProperty("ImageColours", "tl:FF"..Var.Text.." tr:FF"..Var.Text.." bl:FF"..Var.Text.." br:FF"..Var.Text.."")
+	FulscBroTop:setProperty("ImageColours", "tl:FF"..Var.Text.." tr:FF"..Var.Text.." bl:FF"..Var.Text.." br:FF"..Var.Text.."")
 	changeHomeTheme(Var.Text)
 
 	LinkBack:setProperty("ImageColours", "tl:FF"..Var.Divider.." tr:FF"..Var.Divider.." bl:FF"..Var.Divider.." br:FF"..Var.Divider.."")

@@ -409,7 +409,12 @@ addEventHandler("onClientGUIClick", root, function()
 		if h < 600 then h = 600 end
 		if w > Width then w = Width end
 		if h > Height then h = Height end
-		changeBrowserSize(w, h)
+
+		if w == Width and h == Height then
+			setBrowserFullScreened(true)
+		else
+			setBrowserFullScreened(false, w, h)
+		end
 	end
 
 	if source == SearchButton then setSearchEngine(SearchEdit:getText()) end
@@ -425,8 +430,12 @@ addEventHandler("onClientGUIClick", root, function()
 		SearchEdit:setText("http://www.bing.com/search?q=")]]
 	end
 
-	if source == MinimalSize then changeBrowserSize(800, 600) end
-	if source == MaximalSize then changeBrowserSize(Width, Height) end
+	if source == MinimalSize then 
+		setBrowserFullScreened(false, 800, 600)
+	end
+	if source == MaximalSize then 
+		setBrowserFullScreened(true)
+	end
 
 	if source == PageCodes then
 

@@ -486,6 +486,7 @@ function setStaticWindowPosition(win, x, y, rel)
 
 	local id = getStaticWindowID(win)
 	if id ~= nil then 
+		if y < -getStaticWindowBorderSize(win)*2 then y = -getStaticWindowBorderSize(win)*2 end
 		triggerEvent("onClientStaticWindowMove", localPlayer, Windows[id]["Frame"], rel and x*Width or x, rel and y*Height or y)
 		return Windows[id]["WinBack"]:setPosition(tonumber(x), tonumber(y), rel or false)
 	else return false end
