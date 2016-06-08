@@ -67,7 +67,7 @@ local AddTab = GuiStaticImage.create(0, 0, 23, 25, Icons.Adds, false, TabScroll.
 AddTab:setProperty("ImageColours", "tl:FF"..DefCol.But.." tr:FF"..DefCol.But.." bl:FF"..DefCol.But.." br:FF"..DefCol.But.."")
 
 --Преразделитель - ограничитель для кнопок управления окном
-local TabPreDiv = GuiStaticImage.create(0, 24, 30, 1, pane, false, TitleBar)
+local TabPreDiv = GuiStaticImage.create(0, 24, 31, 1, pane, false, TitleBar)
 TabPreDiv:setEnabled(false) --Делаем его ненажимаемым
 TabPreDiv:setProperty("ImageColours", "tl:FF"..DefCol.Divider.." tr:FF"..DefCol.Divider.." bl:FF"..DefCol.Divider.." br:FF"..DefCol.Divider.."")
 
@@ -135,7 +135,7 @@ function setBrowserFullScreened(bool, w, h)
 			changeBrowserSize(SavedSize[1], SavedSize[2])
 		end
 		Browser:setMovable(true)
-		
+
 		local x, y = Browser:getPosition(false)
 		Browser:setPosition(PositionsScreen[1] or x, PositionsScreen[2] or y, false)
 
@@ -595,6 +595,7 @@ function closeTab(id) --По идентификатору
 	AddTab:setPosition(120*n, 0, false) --Ставим кнопку создания вкладки рядом
 	if n == 0 then
 		TabConDiv:setVisible(false)
+		TabScroll.Menu:setPosition(0, 0, false)	
 	end
 	local w = 120*n+23 --Размер скроллера
 	if w < DefaultScreenSize[1]-20 then w = DefaultScreenSize[1]-20 end 
