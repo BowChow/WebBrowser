@@ -248,20 +248,20 @@ addEventHandler("onClientGUIClick", root, function()
 	end
 
 	if source == PreviousLink then
-		if Tabs[SelectedTab].Position < 1 then return false end
+		if Tabs[SelectedTab].Position > 0 then return false end -- larger than 0 since start pos is 0
 		Tabs[SelectedTab].Position = Tabs[SelectedTab].Position - 1
 
-		if Tabs[SelectedTab].Position <= 1 then setButtonEnabled(PreviousLink, false)
+		if Tabs[SelectedTab].Position == 0 then setButtonEnabled(PreviousLink, false)
 		else setButtonEnabled(PreviousLink, true) end
 
 		loadBrowserURL(guiGetBrowser(Tabs[SelectedTab].Browser), Tabs[SelectedTab].Cache[Tabs[SelectedTab].Position], false)
 	end
 
 	if source == NextLink then
-		if Tabs[SelectedTab].Position > #Tabs[SelectedTab].Cache then return false end
+		if Tabs[SelectedTab].Position < #Tabs[SelectedTab].Cache then return false end
 		Tabs[SelectedTab].Position = Tabs[SelectedTab].Position + 1
 
-		if Tabs[SelectedTab].Position >= #Tabs[SelectedTab].Cache then setButtonEnabled(NextLink, false)
+		if Tabs[SelectedTab].Position == #Tabs[SelectedTab].Cache then setButtonEnabled(NextLink, false)
 		else setButtonEnabled(NextLink, true) end
 
 		loadBrowserURL(Tabs[SelectedTab].Browser, Tabs[SelectedTab].Cache[Tabs[SelectedTab].Position], false)
